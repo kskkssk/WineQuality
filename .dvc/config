@@ -1,0 +1,6 @@
+# .dvc/config
+[core]
+    remote = s3_mlops
+['remote "s3_mlops"']
+    url = s3://a-kudasheva
+    endpointurl = http://194.180.188.67:9020
