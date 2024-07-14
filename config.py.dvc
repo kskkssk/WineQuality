@@ -1,0 +1,5 @@
+outs:
+- md5: 969868cd2a6d8cac116cc3b025f344c8
+  size: 128
+  hash: md5
+  path: config.py
