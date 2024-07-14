@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
-
+from model_train import get_data, train, test, update_model
 
 with DAG(
     'hw_kudasheva',
