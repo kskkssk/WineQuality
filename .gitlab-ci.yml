@@ -24,7 +24,7 @@ available:
     - python -m venv .venv
     - source .venv/bin/activate
     - pip install dvc-s3 dvc
-    - dvc remote modify s3-_mlops access_key_id $AWS_ACCESS_KEY_ID
+    - dvc remote modify s3_mlops access_key_id $AWS_ACCESS_KEY_ID
     - dvc remote modify s3_mlops secret_access_key $AWS_SECRET_ACCESS_KEY
     - dvc pull
     - test -f ./model.pkl
