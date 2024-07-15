@@ -28,7 +28,6 @@ available:
     - dvc remote modify s3_mlops access_key_id $AWS_ACCESS_KEY_ID
     - dvc remote modify s3_mlops secret_access_key $AWS_SECRET_ACCESS_KEY
     - dvc pull
-    - ls
     - test -e ./model.pkl
     - test -e ./winequality-red.csv
   rules:
@@ -41,6 +40,7 @@ available:
 unit_tests:
   stage: unit_tests
   script:
+    - if [ ! -f "model.pkl" ]; then echo "Model not found, skipping tests."; exit 0; fi
     - rm -rf .venv
     - python -m venv .venv
     - source .venv/bin/activate
@@ -48,5 +48,4 @@ unit_tests:
     - pytest tests
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      exists:
-        - model.pkl
+
