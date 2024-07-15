@@ -1,0 +1,48 @@
+workflow:
+  variables:
+    VIRTUAL_ENV: .venv
+
+stages:
+  - lint
+  - available
+  - unit_tests
+
+lint:
+  image: python:3.11
+  stage: test
+  script:
+    - python -m venv $VIRTUAL_ENV
+    - source $VIRTUAL_ENV/bin/activate
+    - pip install Flake8
+    - flake8 .
+  rules:
+    - if '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+available:
+  image: python:3.11
+  stage: available
+  script:
+    - python -m venv $VIRTUAL_ENV
+    - source $VIRTUAL_ENV/bin/activate
+    - pip install dvc-s3 dvc
+    - dvc remote modify s3_mlops access_key_id $AWS_ACCESS_KEY_ID
+    - dvc remote modify s3_mlops secret_access_key $AWS_SECRET_ACCESS_KEY
+    - dvc pull
+    - test -f ./model.pkl
+    - test -d ./winequality-red.csv
+  rules:
+    - if '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  cache:
+    key: dvc-cache
+    paths:
+      - .dvc/cache
+
+unit_tests:
+  stage: unit_tests
+  script:
+    - python -m venv $VIRTUAL_ENV
+    - source $VIRTUAL_ENV/bin/activate
+    - pip install -r requirements.txt
+    - pytest tests
+  rules:
+    - if '$CI_PIPELINE_SOURCE == "merge_request_event"' && exists("model.pkl")
