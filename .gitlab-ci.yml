@@ -47,4 +47,6 @@ unit_tests:
     - pip install -r requirements.txt
     - pytest tests
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && test -e "model.pkl"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      exists:
+        - model.pkl
