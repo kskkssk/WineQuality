@@ -2,18 +2,20 @@ import pandas as pd
 import subprocess
 import joblib
 import json
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score
+from datetime import datetime
 
 
 def get_data():
-    from sklearn.model_selection import train_test_split
     subprocess.run(['dvc', 'pull'])
     df = pd.read_csv("winequality-red.csv")
     X = df.drop('quality', axis=1)
     y = df['quality']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-    dic = {"X_train": X_train, "X_test": X_test,
-           "y_train": y_train, "y_test": y_test}
-    return dic
+    data = {"X_train": X_train, "X_test": X_test,
+            "y_train": y_train, "y_test": y_test}
+    return data
 
 
 def load_model():
@@ -31,7 +33,6 @@ def train():
 
 
 def test():
-    from sklearn.metrics import f1_score
     trained_model = train()
     data = get_data()
     y_pred = trained_model.predict(data['X_test'])
@@ -40,19 +41,19 @@ def test():
 
 
 def update_model():
-    from datetime import datetime
     current_f1 = test()
     subprocess.run(['dvc', 'pull', 'metrics'])
     try:
         with open('metrics.json', 'r') as f:
             current_metrics = json.load(f)
-            if current_metrics['f1'] < current_f1:
-                subprocess.run(['dvc', 'add', 'metrics.json'])
-                subprocess.run(['dvc', 'push'])
-                with open('metrics.json', 'w') as file:
-                    json.dump({'f1': current_f1, 'timestamp': datetime.now()}, file)
-                    print(f"Last score {current_metrics['f1']}")
-                    print(f"Updated model with f1 score: {current_f1}")
-    except Exception:
-        subprocess.run(['dvc', 'add', 'metrics'])
+    except FileNotFoundError:
+        current_metrics = {'f1': 0}
+
+    if current_metrics.get('f1', 0) < current_f1:
+        with open('metrics.json', 'w') as file:
+            json.dump({'f1': current_f1, 'timestamp': datetime.now()}, file)
+
+        subprocess.run(['dvc', 'add', 'metrics.json'])
         subprocess.run(['dvc', 'push'])
+        print(f"Last score {current_metrics.get('f1', 'N/A')}")
+        print(f"Updated model with f1 score: {current_f1}")
