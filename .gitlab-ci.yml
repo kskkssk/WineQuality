@@ -20,6 +20,7 @@ available:
   image: python:3.11
   stage: available
   script:
+    - pwd
     - rm -rf .venv
     - python -m venv .venv
     - source .venv/bin/activate
@@ -27,6 +28,7 @@ available:
     - dvc remote modify s3_mlops access_key_id $AWS_ACCESS_KEY_ID
     - dvc remote modify s3_mlops secret_access_key $AWS_SECRET_ACCESS_KEY
     - dvc pull
+    - ls
     - test -f ./model.pkl
     - test -d ./winequality-red.csv
   rules:
