@@ -29,8 +29,8 @@ available:
     - dvc remote modify s3_mlops secret_access_key $AWS_SECRET_ACCESS_KEY
     - dvc pull
     - ls
-    - test -f ./model.pkl
-    - test -d ./winequality-red.csv
+    - test -e ./model.pkl
+    - test -e ./winequality-red.csv
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   cache:
