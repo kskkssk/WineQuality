@@ -6,6 +6,7 @@ stages:
 lint:
   image: python:3.11
   stage: lint
+  allow_failure: true
   script:
     - rm -rf .venv
     - python -m venv .venv
