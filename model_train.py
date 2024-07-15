@@ -10,11 +10,12 @@ def get_data():
     df = pd.read_csv("winequality-red.csv")
     X = df.drop('quality', axis=1)
     y = df['quality']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-    return X_train, X_test, y_train, y_test
+    _, X_test, _, y_test = train_test_split(X, y, test_size=0.33)
+    dic = {"X_test": X_test, "y_test": y_test}
+    return dic
 
 
-def train():
+def load_model():
     subprocess.run(['dvc', 'pull'])
     with open('model.pkl', 'rb') as f:
         model = joblib.load(f)
@@ -24,10 +25,10 @@ def train():
 def test():
     from sklearn.metrics import f1_score
     from datetime import datetime
-    model = train()
-    _, X_test, _, y_test = get_data()
-    y_pred = model.predict(X_test)
-    f1 = f1_score(y_true=y_test, y_pred=y_pred, average='macro')
+    model = load_model()
+    data = get_data()
+    y_pred = model.predict(data['X_test'])
+    f1 = f1_score(y_true=data['y_test'], y_pred=y_pred, average='macro')
     return f1
 
 
