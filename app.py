@@ -1,8 +1,12 @@
+import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import uvicorn
-from model_train import load_model
+import subprocess
+import logging
+
 
 app = FastAPI()
 
@@ -31,17 +35,54 @@ class Result(BaseModel):
         orm_mode = True
 
 
+def load_model():
+    subprocess.run(["dvc", "pull"])
+    try:
+        with open('model.pkl', 'rb') as f:
+            model = joblib.load(f)
+            return model
+    except Exception:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+
+
+model = load_model()
+
+
+@app.get("/")
+async def root():
+    return "Hello"
+
+
 @app.post('/predict', response_model=Result)
 def predict(data: Wine):
-    data = data.to_dict()
-    model = load_model()
-    df = pd.DataFrame([data])
-    prediction = model.predict(df)
-    return prediction
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    try:
+        data = data.dict()
+        df = pd.DataFrame({
+            'fixed acidity': [data['fixed_acidity']],
+            'volatile acidity': [data['volatile_acidity']],
+            'citric acid': [data['citric_acid']],
+            'residual sugar': [data['residual_sugar']],
+            'chlorides': [data['chlorides']],
+            'free sulfur dioxide': [data['free_sulfur_dioxide']],
+            'total sulfur dioxide': [data['total_sulfur_dioxide']],
+            'density': [data['density']],
+            'pH': [data['pH']],
+            'sulphates': [data['sulphates']],
+            'alcohol': [data['alcohol']],
+        })
+
+        prediction = model.predict(df)
+        return Result(predicted_quality=prediction)
+    except Exception as e:
+        logging.error(f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Prediction failed")
 
 
 is_alive = True
 is_ready = True
+
 
 @app.get("/liveness")
 async def liveness():
@@ -49,8 +90,31 @@ async def liveness():
         return {"status": "OK"}
     raise HTTPException(status_code=503, detail="Service not alive")
 
+
 @app.get("/readiness")
 async def readiness():
-    if is_ready:
-        return {"status": "OK"}
-    raise HTTPException(status_code=503, detail="Service not ready")
+    try:
+        if is_ready:
+            return {"status": "OK"}
+        else:
+            return {"status": "NOT_READY"}
+    except:
+        raise HTTPException(status_code=503, detail="Service not ready")
+
+
+@app.get('/healthcheck')
+def health():
+    if model:
+        return JSONResponse(content={'status': 'ok'}, status_code=200)
+    if not model:
+        return JSONResponse(content={'status': 'error', 'reason': 'model'}, status_code=503)
+    else:
+        return JSONResponse(content={'status': 'error', 'reason': 'unknown'}, status_code=500)
+
+
+if __name__ == "__main__":
+    try:
+        load_model()
+    except Exception as e:
+        print(f"Model is not loaded: {str(e)}")
+    uvicorn.run(app, host='127.0.0.1', port=8082)
