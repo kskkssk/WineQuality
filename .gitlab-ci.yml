@@ -1,6 +1,7 @@
-workflow:
-  variables:
-    VIRTUAL_ENV: .venv
+image: python:3.11
+variables:
+  VIRTUAL_ENV: .venv
+
 
 stages:
   - lint
