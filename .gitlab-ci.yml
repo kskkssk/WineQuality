@@ -5,7 +5,7 @@ stages:
 
 lint:
   image: python:3.11
-  stage: test
+  stage: lint
   script:
     - python -m venv $VIRTUAL_ENV
     - source $VIRTUAL_ENV/bin/activate
