@@ -42,6 +42,7 @@ def test():
 
 def update_model():
     current_f1 = test()
+    trained_model = train()
     subprocess.run(['dvc', 'pull', 'metrics'])
     try:
         with open('metrics.json', 'r') as f:
@@ -53,7 +54,10 @@ def update_model():
         with open('metrics.json', 'w') as file:
             json.dump({'f1': current_f1, 'timestamp': datetime.now()}, file)
 
+        joblib.dump(trained_model, 'model.pkl')
+
         subprocess.run(['dvc', 'add', 'metrics.json'])
+        subprocess.run(['dvc', 'add', 'model.pkl'])
         subprocess.run(['dvc', 'push'])
         print(f"Last score {current_metrics.get('f1', 'N/A')}")
         print(f"Updated model with f1 score: {current_f1}")
