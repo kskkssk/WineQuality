@@ -17,7 +17,7 @@ lint:
     - pip install Flake8
     - flake8 .
   rules:
-    - if '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 available:
   image: python:3.11
@@ -32,7 +32,7 @@ available:
     - test -f ./model.pkl
     - test -d ./winequality-red.csv
   rules:
-    - if '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   cache:
     key: dvc-cache
     paths:
@@ -46,4 +46,4 @@ unit_tests:
     - pip install -r requirements.txt
     - pytest tests
   rules:
-    - if '$CI_PIPELINE_SOURCE == "merge_request_event"' && exists("model.pkl")
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"' && exists("model.pkl")
