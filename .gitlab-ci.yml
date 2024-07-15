@@ -7,10 +7,9 @@ lint:
   image: python:3.11
   stage: lint
   script:
-    - rm -rf $VIRTUAL_ENV
-    - mkdir -p $VIRTUAL_ENV
-    - python -m venv $VIRTUAL_ENV/.venv
-    - source $VIRTUAL_ENV/.venv/bin/activate
+    - rm -rf .venv
+    - python -m venv .venv
+    - source .venv/bin/activate
     - pip install Flake8
     - flake8 .
   rules:
@@ -20,8 +19,9 @@ available:
   image: python:3.11
   stage: available
   script:
-    - python -m venv $VIRTUAL_ENV/.venv
-    - source $VIRTUAL_ENV/.venv/bin/activate
+    - rm -rf .venv
+    - python -m venv .venv
+    - source .venv/bin/activate
     - pip install dvc-s3 dvc
     - dvc remote modify s3-_mlops access_key_id $AWS_ACCESS_KEY_ID
     - dvc remote modify s3_mlops secret_access_key $AWS_SECRET_ACCESS_KEY
@@ -38,13 +38,12 @@ available:
 unit_tests:
   stage: unit_tests
   script:
-    - python -m venv $VIRTUAL_ENV/.venv
-    - source $VIRTUAL_ENV/.venv/bin/activate
+    - rm -rf .venv
+    - python -m venv .venv
+    - source .venv/bin/activate
     - pip install -r requirements.txt
     - pytest tests
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       exists:
         - model.pkl
-
-
