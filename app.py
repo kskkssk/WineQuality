@@ -98,7 +98,7 @@ async def readiness():
             return {"status": "OK"}
         else:
             return {"status": "NOT_READY"}
-    except:
+    except Exception:
         raise HTTPException(status_code=503, detail="Service not ready")
 
 
@@ -107,9 +107,11 @@ def health():
     if model:
         return JSONResponse(content={'status': 'ok'}, status_code=200)
     if not model:
-        return JSONResponse(content={'status': 'error', 'reason': 'model'}, status_code=503)
+        return JSONResponse(content={'status': 'error',
+                                     'reason': 'model'}, status_code=503)
     else:
-        return JSONResponse(content={'status': 'error', 'reason': 'unknown'}, status_code=500)
+        return JSONResponse(content={'status': 'error',
+                                     'reason': 'unknown'}, status_code=500)
 
 
 if __name__ == "__main__":

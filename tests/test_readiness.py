@@ -3,6 +3,7 @@ from app import app
 
 client = TestClient(app)
 
+
 def test_readiness():
     response = client.get("/readiness")
     assert response.status_code == 200

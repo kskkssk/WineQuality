@@ -11,7 +11,8 @@ def get_data():
     X = df.drop('quality', axis=1)
     y = df['quality']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-    dic = {"X_train": X_train, "X_test": X_test, "y_train": y_train, "y_test": y_test}
+    dic = {"X_train": X_train, "X_test": X_test,
+           "y_train": y_train, "y_test": y_test}
     return dic
 
 
@@ -48,12 +49,10 @@ def update_model():
             if current_metrics['f1'] < current_f1:
                 subprocess.run(['dvc', 'add', 'metrics.json'])
                 subprocess.run(['dvc', 'push'])
-                with open('metrics.json', 'w') as f:
-                    json.dump({'f1': current_f1, 'timestamp': datetime.now()}, f)
+                with open('metrics.json', 'w') as file:
+                    json.dump({'f1': current_f1, 'timestamp': datetime.now()}, file)
                     print(f"Last score {current_metrics['f1']}")
                     print(f"Updated model with f1 score: {current_f1}")
-    except:
+    except Exception:
         subprocess.run(['dvc', 'add', 'metrics'])
         subprocess.run(['dvc', 'push'])
-
-
