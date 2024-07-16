@@ -32,18 +32,18 @@ def train():
     return trained_model
 
 
-def test():
-    trained_model = train()
-    data = get_data()
+def test(trained_model, data):
     y_pred = trained_model.predict(data['X_test'])
     f1 = f1_score(y_true=data['y_test'], y_pred=y_pred, average='macro')
     return f1
 
 
 def update_model():
-    current_f1 = test()
+    data = get_data()
     trained_model = train()
-    subprocess.run(['dvc', 'pull', 'metrics'])
+    current_f1 = test(trained_model, data)
+    subprocess.run(['dvc', 'pull', 'metrics.json'])
+
     try:
         with open('metrics.json', 'r') as f:
             current_metrics = json.load(f)
@@ -52,12 +52,26 @@ def update_model():
 
     if current_metrics.get('f1', 0) < current_f1:
         with open('metrics.json', 'w') as file:
-            json.dump({'f1': current_f1, 'timestamp': datetime.now()}, file)
+            json.dump({'f1': current_f1, 'timestamp': datetime.now().isoformat()}, file)
 
         joblib.dump(trained_model, 'model.pkl')
 
         subprocess.run(['dvc', 'add', 'metrics.json'])
         subprocess.run(['dvc', 'add', 'model.pkl'])
         subprocess.run(['dvc', 'push'])
+
         print(f"Last score {current_metrics.get('f1', 'N/A')}")
         print(f"Updated model with f1 score: {current_f1}")
+
+        subprocess.run(['git', 'add', 'metrics.json.dvc', 'model.pkl.dvc'])
+        subprocess.run(['git', 'commit', '-m', f"Auto-commit: Updated model with f1 score {current_f1}"])
+        subprocess.run(['git', 'tag', f"model-update-{datetime.now().strftime('%Y%m%d%H%M%S')}"])
+        subprocess.run(['git', 'push'])
+        subprocess.run(['git', 'push', '--tags'])
+    else:
+        print(f"Current model f1 score: {current_metrics.get('f1', 'N/A')}, New model f1 score: {current_f1}")
+
+
+if __name__ == "__main__":
+    update_model()
+
